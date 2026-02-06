@@ -114,6 +114,48 @@ test.describe('PRD-001: Button Styling', () => {
     expect(className).toContain('btn__secondary');
   });
 
+  test('Confirm button has primary styling', async ({ page }) => {
+    await page.fill('#new-todo-input', 'Test task');
+    await page.click('button[type="submit"]');
+    
+    // Enter edit mode
+    const editButton = page.getByRole('button', { name: /edit test task/i });
+    await editButton.click();
+    
+    const confirmButton = page.getByRole('button', { name: /confirm new name for test task/i });
+    
+    // Check class includes btn__primary
+    const className = await confirmButton.getAttribute('class');
+    expect(className).toContain('btn__primary');
+    
+    // Check background color (blue)
+    const bgColor = await confirmButton.evaluate((el) => 
+      window.getComputedStyle(el).backgroundColor
+    );
+    expect(bgColor).toBe('rgb(13, 110, 253)'); // #0d6efd
+  });
+
+  test('Confirm button submits the form', async ({ page }) => {
+    await page.fill('#new-todo-input', 'Original task');
+    await page.click('button[type="submit"]');
+    
+    // Enter edit mode
+    const editButton = page.getByRole('button', { name: /edit original task/i });
+    await editButton.click();
+    
+    // Change the task name
+    const input = page.locator('.todo-text');
+    await input.fill('Updated task');
+    
+    // Click confirm button
+    const confirmButton = page.getByRole('button', { name: /confirm new name for original task/i });
+    await confirmButton.click();
+    
+    // Verify the task name was updated
+    const taskLabel = page.locator('.todo-label').filter({ hasText: 'Updated task' });
+    await expect(taskLabel).toBeVisible();
+  });
+
   test('Filter buttons have hover state', async ({ page }) => {
     const allButton = page.getByRole('button', { name: /show all tasks/i });
     
